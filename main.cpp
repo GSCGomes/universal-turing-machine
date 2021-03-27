@@ -6,20 +6,30 @@
 using namespace std;
 
 string trim(const string& s);
+string stringFromFile(const string& fileName);
  
 int main(int argc, char** argv)
 {
-    assert ("must specify an input file" && argc > 1 &&);
+    assert ("must specify an input file" && argc > 1);
 
+    string tape1 = string(stringFromFile(argv[1]));
+    string tape2 = tape1.substr(tape1.find("000"));
+    string tape3 = "1";
+
+    return 0;
+}
+
+string stringFromFile(const string& fileName)
+{
     // write string from file
-    ifstream ifs(argv[1]);
+    ifstream ifs(fileName);;
     string input((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
 
     assert ("input can't be empty" && !input.empty()); 
     input = trim(input); // remove leading and trailing whitespaces
     assert ("input must composed by only 0's and 1's" && (input.find_last_not_of("01") == string::npos));
 
-    return 0;
+    return input;
 }
 
 string trim(const string& s)
