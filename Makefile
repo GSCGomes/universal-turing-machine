@@ -3,8 +3,8 @@ CC = g++
 
 default: utm
 
-utm:  main.cpp
-	$(CC) $(CFLAGS) -o utm main.cpp
+utm:  utm.cpp
+	$(CC) $(CFLAGS) -o utm utm.cpp
 
 clean: 
 	$(RM) utm *.o *~
