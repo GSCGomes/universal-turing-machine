@@ -6,6 +6,8 @@
 #include <unordered_set>
 #include <vector>
 
+#define DEBUG 1
+
 using namespace std;
 
 const unsigned gMaxIterations = 1000;
@@ -18,83 +20,70 @@ bool findTransition(const string& tape, const string& state, const string& word,
                     string& nextState, string& newWord, string& direction);
 void replaceWord(string& tape, const size_t& head, const string& word);
 void moveHead(string& tape, size_t& head, const string& direction);
-void print(const string& tape, const size_t& head);
+void printCurrent(const string& tape, const size_t& head, const string& state);
+void printInitial(const string& tape1, const string& tape2, const string& tape3);
  
 int main(int argc, char** argv)
 {
     assert ("must specify an input file" && argc > 1);
 
-    // assign initial state of tape 1
+    // fill tape1
     string tape1 = string(stringFromFile(argv[1]));
 
-    // assign initial state of tape 2
-    size_t separator = tape1.find("000");       // find separator between Turing machine and input representation
-    string tape2 = tape1.substr(separator + 3); // copy input to tape2
+    // fill tape2 (input representation)
+    string tape2 = tape1.substr(tape1.find("000") + 3);
+    assert ("wrong format" && (tape2.empty() || (!tape2.empty() && *tape2.begin() == '1' && *tape2.rbegin() == '1')));
+    tape2 = "10" + tape2 + (tape2.empty() ? "" : "0" ) + "11"; // insert beginning and blank markers
 
-    assert ("wrong format" && !tape2.empty() && *tape2.begin() == '1' && *tape2.rbegin() == '1');
-    tape2 = "10" + tape2 + "011"; // insert beginning and blank markers
-
-    // assign initial state of tape 3
+    // fill tape3 (current state representation) with first state 
     string tape3 = "1";
+
+    if (DEBUG) printInitial(tape1, tape2, tape3);
 
     unordered_set<string> finalStates = getFinalStates(tape1);
 
     // erase final states and input from tape1
-    tape1.erase(separator);
+    tape1.erase(tape1.find("000"));
     tape1.erase(0, tape1.find("00") + 2);
 
-    size_t head1 = 0, head2 = 2, head3 = 0;
+    // head of the input tape (tape2)
+    size_t head = 2;
+
     unsigned nIterations = 0;
 
     while(1)
     {
-        string nextState, newWord, direction;
-        if (findTransition(tape1, getWordUnderHead(tape3, head3), getWordUnderHead(tape2, head2), nextState, newWord, direction))
-        {
-            replaceWord(tape3, head3, nextState);
-            replaceWord(tape2, head2, newWord);
+        if (DEBUG) printCurrent(tape2, head, tape3);
 
-            moveHead(tape2, head2, direction);
+        string nextState, newWord, direction;
+        if (findTransition(tape1, getWordUnderHead(tape3, 0 /* head of tape3 */), getWordUnderHead(tape2, head), nextState, newWord, direction))
+        {
+            replaceWord(tape3, 0 /* head of tape3 */, nextState);
+            replaceWord(tape2, head, newWord);
+
+            moveHead(tape2, head, direction);
         }
         else
         {
-            if (finalStates.count(getWordUnderHead(tape3, head3)))
+            if (finalStates.count(getWordUnderHead(tape3, 0 /* head of tape3 */)))
             {
-                cout << "yes" << endl;
+                cout << "accepted" << endl;
                 exit(0);
             }
             else
             {
-                cout << "no, stopped in a non-final state" << endl;
+                cout << "rejected, stopped in a non-final state" << endl;
                 exit(-1);
             }
         }
         if (nIterations++ >= gMaxIterations)
         {
-            cout << "no, reached " << gMaxIterations << " iterations" << endl;
+            cout << "rejected, reached " << gMaxIterations << " iterations" << endl;
             exit(-1);
         }
     }
 
     return 0;
-}
-
-void print(const string& tape, const size_t& head)
-{
-    cout << "\t" << tape << endl << "\t";
-    for (size_t i = 0; i < tape.size(); ++i)
-    {
-        if (i == head)
-            cout << "^";
-        else
-            cout << " ";
-    }
-    cout << endl;
-}
-
-inline void replaceWord(string& tape, const size_t& head, const string& word)
-{
-    tape.replace(head, getWordUnderHead(tape, head).size(), word);
 }
 
 void moveHead(string& tape, size_t& head, const string& direction)
@@ -115,6 +104,15 @@ void moveHead(string& tape, size_t& head, const string& direction)
     else 
         assert ("wrong format" && 0);
 }
+
+string getWordUnderHead(const string& tape, const size_t& head)
+{
+    assert ("wrong format" && tape[head] == '1');
+
+    const size_t pos = tape.find_first_of("0", head);
+    return (pos != string::npos) ? tape.substr(head, pos - head) : tape.substr(head);
+}
+
 
 unordered_set<string> getFinalStates(string tape)
 {
@@ -138,6 +136,12 @@ unordered_set<string> getFinalStates(string tape)
 
     return finalStates;
 }
+
+inline void replaceWord(string& tape, const size_t& head, const string& word)
+{
+    tape.replace(head, getWordUnderHead(tape, head).size(), word);
+}
+
 
 bool findTransition(const string& tape, const string& state, const string& word, string& nextState, string& newWord, string& direction)
 {
@@ -180,14 +184,6 @@ bool findTransition(const string& tape, const string& state, const string& word,
     return true;
 }
 
-string getWordUnderHead(const string& tape, const size_t& head)
-{
-    assert ("wrong format" && tape[head] == '1');
-
-    const size_t pos = tape.find_first_of("0", head);
-    return (pos != string::npos) ? tape.substr(head, pos - head) : tape.substr(head);
-}
-
 string stringFromFile(const string& fileName)
 {
     // write string from file
@@ -219,3 +215,31 @@ string trim(const string& s)
 
     return rtrim(ltrim(s));
 }
+
+void printCurrent(const string& tape, const size_t& head, const string& state)
+{
+    cout << endl << string(tape.size() + 20, '-') << endl;
+    cout << "current state: " << state << endl;
+    cout << "input tape:\n\t" << tape << "\n\t";
+    for (size_t i = 0; i < tape.size(); ++i)
+    {
+        if (i == head)
+            cout << "^";
+        else
+            cout << " ";
+    }
+    cout << endl << string(tape.size() + 20, '-') << endl;
+    cout << endl;
+}
+
+void printInitial(const string& tape1, const string& tape2, const string& tape3)
+{
+    cout << endl << string(tape1.size() + 20, '=') << endl;
+    cout << "initial position:"
+        << "\n\tfirst tape (final states + machine + input):\n\t\t" << tape1
+        << "\n\tsecond tape (input with added initial and blank markers):\n\t\t" << tape2
+        << "\n\tthird tape (first state):\n\t\t" << tape3;
+    cout << endl << string(tape1.size() + 20, '=') << endl;
+
+}
+
