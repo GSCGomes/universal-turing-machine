@@ -218,7 +218,7 @@ string trim(const string& s)
 
 void printCurrent(const string& tape, const size_t& head, const string& state)
 {
-    cout << endl << string(tape.size() + 20, '-') << endl;
+    cout << endl << string(30, '-') << endl;
     cout << "current state: " << state << endl;
     cout << "input tape:\n\t" << tape << "\n\t";
     for (size_t i = 0; i < tape.size(); ++i)
@@ -228,18 +228,18 @@ void printCurrent(const string& tape, const size_t& head, const string& state)
         else
             cout << " ";
     }
-    cout << endl << string(tape.size() + 20, '-') << endl;
+    cout << endl << string(30, '-') << endl;
     cout << endl;
 }
 
 void printInitial(const string& tape1, const string& tape2, const string& tape3)
 {
-    cout << endl << string(tape1.size() + 20, '=') << endl;
+    cout << endl << string(30, '=') << endl;
     cout << "initial position:"
         << "\n\tfirst tape (final states + machine + input):\n\t\t" << tape1
         << "\n\tsecond tape (input with added initial and blank markers):\n\t\t" << tape2
         << "\n\tthird tape (first state):\n\t\t" << tape3;
-    cout << endl << string(tape1.size() + 20, '=') << endl;
+    cout << endl << string(30, '=') << endl;
 
 }
 
