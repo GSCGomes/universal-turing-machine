@@ -14,6 +14,9 @@ string getWordUnderHead(const string& tape, const size_t& head);
 unordered_set<string> getFinalStates(string tape);
 bool findTransition(const string& tape, const string& state, const string& word,
                     string& nextState, string& newWord, string& direction);
+void replaceWord(string& tape, const size_t& head, const string& word);
+void moveHead(string& tape, size_t& head, const string& direction);
+void print(const string& tape, const size_t& head);
  
 int main(int argc, char** argv)
 {
@@ -26,6 +29,9 @@ int main(int argc, char** argv)
     size_t separator = tape1.find("000");       // find separator between Turing machine and input representation
     string tape2 = tape1.substr(separator + 3); // copy input to tape2
 
+    assert ("wrong format" && !tape2.empty() && *tape2.begin() == '1' && *tape2.rbegin() == '1');
+    tape2 = "10" + tape2 + "011"; // insert beginning and blank markers
+
     // assign initial state of tape 3
     string tape3 = "1";
 
@@ -35,11 +41,71 @@ int main(int argc, char** argv)
     tape1.erase(separator);
     tape1.erase(0, tape1.find("00") + 2);
 
-    size_t head1 = 0, head2 = 0, head3 = 0;
+    size_t head1 = 0, head2 = 2, head3 = 0;
 
-    string nextState, newWord, direction;
+    while(1)
+    {
+        string nextState, newWord, direction;
+        if (findTransition(tape1, getWordUnderHead(tape3, head3), getWordUnderHead(tape2, head2), nextState, newWord, direction))
+        {
+            replaceWord(tape3, head3, nextState);
+            replaceWord(tape2, head2, newWord);
+
+            moveHead(tape2, head2, direction);
+        }
+        else
+        {
+            if (finalStates.find(getWordUnderHead(tape3, head3)) != finalStates.end())
+            {
+                cout << "yes." << endl;
+                exit(0);
+            }
+            else
+            {
+                cout << "no." << endl;
+                exit(-1);
+            }
+        }
+    }
 
     return 0;
+}
+
+void print(const string& tape, const size_t& head)
+{
+    cout << "\t" << tape << endl << "\t";
+    for (size_t i = 0; i < tape.size(); ++i)
+    {
+        if (i == head)
+            cout << "^";
+        else
+            cout << " ";
+    }
+    cout << endl;
+}
+
+inline void replaceWord(string& tape, const size_t& head, const string& word)
+{
+    tape.replace(head, getWordUnderHead(tape, head).size(), word);
+}
+
+void moveHead(string& tape, size_t& head, const string& direction)
+{
+    if (direction == "1") // move head to the right
+    {
+        // if we are reaching end of the tape, add another blank marker
+        if (tape.find("0", head) == string::npos)
+            tape += "011";
+        head = tape.find("1",tape.find("0", head));
+    }
+    else if (direction == "11") // move head to the left
+    {
+        assert("wrong format" && head != 0 && tape[head-1] == '0');
+        head -= 2;
+        while (head != 0 && tape[head-1] == '1') head--;
+    }
+    else 
+        assert ("wrong format" && 0);
 }
 
 unordered_set<string> getFinalStates(string tape)
@@ -69,7 +135,7 @@ bool findTransition(const string& tape, const string& state, const string& word,
 {
     const string auxTape = "00" + tape;
 
-    size_t l = auxTape.find("00" + state + "0" + word);
+    size_t l = auxTape.find("00" + state + "0" + word + "0");
     if (l == string::npos)
         return false;
     else
@@ -108,6 +174,8 @@ bool findTransition(const string& tape, const string& state, const string& word,
 
 string getWordUnderHead(const string& tape, const size_t& head)
 {
+    assert ("wrong format" && tape[head] == '1');
+
     const size_t pos = tape.find_first_of("0", head);
     return (pos != string::npos) ? tape.substr(head, pos - head) : tape.substr(head);
 }
