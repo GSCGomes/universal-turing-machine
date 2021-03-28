@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 
     unordered_set<string> finalStates = getFinalStates(tape1);
 
-    // erase final states and input from tape1
+    // erase final states and input from tape1, keeping only transitions
     tape1.erase(tape1.find("000"));
     tape1.erase(0, tape1.find("00") + 2);
 
@@ -56,7 +56,8 @@ int main(int argc, char** argv)
         if (DEBUG) printCurrent(tape2, head, tape3);
 
         string nextState, newWord, direction;
-        if (findTransition(tape1, getWordUnderHead(tape3, 0 /* head of tape3 */), getWordUnderHead(tape2, head), nextState, newWord, direction))
+        if (findTransition(tape1, getWordUnderHead(tape3, 0 /* head of tape3 */), getWordUnderHead(tape2, head),
+                           nextState, newWord, direction))
         {
             replaceWord(tape3, 0 /* head of tape3 */, nextState);
             replaceWord(tape2, head, newWord);
