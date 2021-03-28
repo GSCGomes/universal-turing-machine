@@ -8,6 +8,8 @@
 
 using namespace std;
 
+const unsigned gMaxIterations = 1000;
+
 string trim(const string& s);
 string stringFromFile(const string& fileName);
 string getWordUnderHead(const string& tape, const size_t& head);
@@ -42,6 +44,7 @@ int main(int argc, char** argv)
     tape1.erase(0, tape1.find("00") + 2);
 
     size_t head1 = 0, head2 = 2, head3 = 0;
+    unsigned nIterations = 0;
 
     while(1)
     {
@@ -55,16 +58,21 @@ int main(int argc, char** argv)
         }
         else
         {
-            if (finalStates.find(getWordUnderHead(tape3, head3)) != finalStates.end())
+            if (finalStates.count(getWordUnderHead(tape3, head3)))
             {
-                cout << "yes." << endl;
+                cout << "yes" << endl;
                 exit(0);
             }
             else
             {
-                cout << "no." << endl;
+                cout << "no, stopped in a non-final state" << endl;
                 exit(-1);
             }
+        }
+        if (nIterations++ >= gMaxIterations)
+        {
+            cout << "no, reached " << gMaxIterations << " iterations" << endl;
+            exit(-1);
         }
     }
 
